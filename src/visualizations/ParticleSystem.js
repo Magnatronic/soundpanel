@@ -29,10 +29,11 @@ export default class ParticleSystem extends VisualizationBase {
   render(audioData) {
     const { ctx, canvas, config } = this;
     // Fade the canvas instead of clearing it completely
-    ctx.globalAlpha = 0.2;
-    ctx.fillStyle = "#000";
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1.0;
+    ctx.restore();
 
     // Calculate average volume
     const avg = audioData.reduce((a, b) => a + Math.abs(b - 128), 0) / audioData.length;
@@ -54,12 +55,17 @@ export default class ParticleSystem extends VisualizationBase {
       const speed = (1 + Math.random() * 1.5 + avg * 0.02) * (Math.min(canvas.width, canvas.height) / 720);
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
-      // Color and size modulated by frequency
-      const freqIdx = Math.floor(Math.random() * audioData.length);
-      const freqVal = audioData[freqIdx];
-      const color = hslColor((freqVal * 2 + avg * 2) % 360, 90, 60);
-      const size = 0.7 + (freqVal - 128) * 0.02 * (Math.min(canvas.width, canvas.height) / 720);
-      this.particles.push(new Particle(x, y, vx, vy, color, size));
+    // Color and size modulated by frequency and theme
+    const freqIdx = Math.floor(Math.random() * audioData.length);
+    const freqVal = audioData[freqIdx];
+    let color;
+    if (config.theme === 'light') {
+      color = hslColor((freqVal * 2 + avg * 2) % 360, 70, 45);
+    } else {
+      color = hslColor((freqVal * 2 + avg * 2) % 360, 90, 60);
+    }
+    const size = 0.7 + (freqVal - 128) * 0.02 * (Math.min(canvas.width, canvas.height) / 720);
+    this.particles.push(new Particle(x, y, vx, vy, color, size));
     }
     // Update and draw particles
     this.particles = this.particles.filter(p => p.life > 0);
@@ -69,12 +75,13 @@ export default class ParticleSystem extends VisualizationBase {
     }
     for (const p of this.particles) {
       p.update();
+      ctx.save();
       ctx.globalAlpha = p.life * 0.8 + 0.2;
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, Math.max(1, p.size), 0, 2 * Math.PI);
       ctx.fill();
+      ctx.restore();
     }
-    ctx.globalAlpha = 1.0;
   }
 }

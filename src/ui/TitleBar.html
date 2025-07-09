@@ -1,0 +1,153 @@
+<!-- Material Icons CDN -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: #fff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    overflow: hidden;
+  }
+  #titleBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #222;
+    height: 56px;
+    padding: 0 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    z-index: 10;
+    position: relative;
+  }
+  #titleBar .left, #titleBar .right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #titleBar .app-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-right: 1.5rem;
+  }
+  #titleBar .mode-icon {
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  #titleBar .mode-icon.active {
+    color: #4fc3f7;
+    opacity: 1;
+  }
+  #titleBar .material-icons {
+    user-select: none;
+  }
+  #titleBar .right .material-icons {
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.8;
+    margin-left: 0.5rem;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  #titleBar .right .material-icons:hover {
+    opacity: 1;
+    color: #fff;
+  }
+  #settingsModal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  #settingsModal .modal-content {
+    background: #232323;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    min-width: 320px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+  }
+  #settingsModal .modal-content label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  #settingsModal .modal-content input[type="range"] {
+    width: 100%;
+  }
+  #settingsModal .modal-content select {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 6px;
+    background: #222;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+  }
+  #settingsModal .close {
+    position: absolute;
+    top: 0.7rem;
+    right: 1.2rem;
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  #settingsModal .close:hover {
+    opacity: 1;
+    color: #f44336;
+  }
+  .hidden { display: none !important; }
+  #visualizer {
+    display: block;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 56px);
+    z-index: 1;
+  }
+  @media (max-width: 600px) {
+    #titleBar { flex-direction: column; height: auto; padding: 0.5rem; }
+    #visualizer { top: 48px; height: calc(100vh - 48px); }
+    #settingsModal .modal-content { min-width: 90vw; }
+  }
+</style>
+
+<div id="titleBar">
+  <div class="left">
+    <span class="app-title">Soundpanel</span>
+    <span class="material-icons mode-icon" id="mode-frequencyBars" title="Frequency Bars">equalizer</span>
+    <span class="material-icons mode-icon" id="mode-radialBurst" title="Radial Burst">donut_large</span>
+    <span class="material-icons mode-icon" id="mode-particleSystem" title="Particle System">blur_on</span>
+    <span class="material-icons mode-icon" id="mode-waveform" title="Waveform">show_chart</span>
+    <span class="material-icons mode-icon" id="mode-fluidSimulation" title="Fluid Simulation">waves</span>
+  </div>
+  <div class="right">
+    <span class="material-icons" id="fullscreenBtn" title="Full Screen">fullscreen</span>
+    <span class="material-icons" id="pauseBtn" title="Pause/Play">pause</span>
+    <span class="material-icons" id="settingsBtn" title="Settings">settings</span>
+  </div>
+</div>
+<div id="settingsModal" class="hidden">
+  <div class="modal-content">
+    <span class="material-icons close" id="closeSettings">close</span>
+    <label for="sensitivityRange">Sensitivity</label>
+    <input type="range" id="sensitivityRange" min="0.1" max="2" step="0.01" value="1.0" />
+    <label for="colorThemeSelect">Color Theme</label>
+    <select id="colorThemeSelect">
+      <option value="rainbow">Rainbow</option>
+      <option value="neon">Neon</option>
+      <option value="pastel">Pastel</option>
+      <option value="mono">Monochrome</option>
+    </select>
+  </div>
+</div>

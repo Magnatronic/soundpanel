@@ -1,15 +1,77 @@
 import AudioProcessor from './audio/AudioProcessor.js';
 import FrequencyAnalyzer from './audio/FrequencyAnalyzer.js';
 import BeatDetector from './audio/BeatDetector.js';
-import ControlPanel from './ui/ControlPanel.js';
-import PresetManager from './ui/PresetManager.js';
+import { resizeCanvasToDisplaySize } from './utils/CanvasUtils.js';
 import FrequencyBars from './visualizations/FrequencyBars.js';
 import RadialBurst from './visualizations/RadialBurst.js';
 import ParticleSystem from './visualizations/ParticleSystem.js';
 import Waveform from './visualizations/Waveform.js';
-// import GeometricPatterns from './visualizations/GeometricPatterns.js';
 import FluidSimulation from './visualizations/FluidSimulation.js';
-import { resizeCanvasToDisplaySize } from './utils/CanvasUtils.js';
+
+// Mount the new title bar and modal UI
+
+// Inject TitleBar.html contents into the DOM at runtime (no import)
+fetch(import.meta.env.BASE_URL + 'TitleBar.html')
+  .then(r => r.text())
+  .then(html => {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    // Move style to head
+    const style = temp.querySelector('style');
+    if (style) document.head.appendChild(style);
+    // Move titleBar and settingsModal to body
+    const titleBar = temp.querySelector('#titleBar');
+    const settingsModal = temp.querySelector('#settingsModal');
+    if (titleBar) {
+      const oldBar = document.getElementById('titleBar');
+      if (oldBar) oldBar.replaceWith(titleBar);
+      else document.body.prepend(titleBar);
+    }
+    if (settingsModal) {
+      const oldModal = document.getElementById('settingsModal');
+      if (oldModal) oldModal.replaceWith(settingsModal);
+      else document.body.appendChild(settingsModal);
+    }
+    // Re-run UI event handler setup after DOM injection
+    setupUIEventHandlers();
+  });
+
+function setupUIEventHandlers() {
+  setActiveModeIcon(mode);
+  document.getElementById('mode-frequencyBars').onclick = () => { switchVisualization('frequencyBars'); setActiveModeIcon('frequencyBars'); };
+  document.getElementById('mode-radialBurst').onclick = () => { switchVisualization('radialBurst'); setActiveModeIcon('radialBurst'); };
+  document.getElementById('mode-particleSystem').onclick = () => { switchVisualization('particleSystem'); setActiveModeIcon('particleSystem'); };
+  document.getElementById('mode-waveform').onclick = () => { switchVisualization('waveform'); setActiveModeIcon('waveform'); };
+  document.getElementById('mode-fluidSimulation').onclick = () => { switchVisualization('fluidSimulation'); setActiveModeIcon('fluidSimulation'); };
+
+  document.getElementById('fullscreenBtn').onclick = () => {
+    const canvas = document.getElementById('visualizer');
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (canvas && canvas.requestFullscreen) {
+      canvas.requestFullscreen();
+    }
+  };
+
+  document.getElementById('pauseBtn').onclick = () => {
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? 'play_arrow' : 'pause';
+  };
+
+  document.getElementById('settingsBtn').onclick = () => {
+    document.getElementById('settingsModal').classList.remove('hidden');
+  };
+  document.getElementById('closeSettings').onclick = () => {
+    document.getElementById('settingsModal').classList.add('hidden');
+  };
+
+  document.getElementById('sensitivityRange').oninput = (e) => {
+    config.sensitivity = parseFloat(e.target.value);
+  };
+  document.getElementById('colorThemeSelect').onchange = (e) => {
+    config.colorTheme = e.target.value;
+  };
+}
 
 const config = {
   sensitivity: 1.0,
@@ -22,8 +84,7 @@ const config = {
 };
 
 const canvas = document.getElementById('visualizer');
-const controlPanel = document.getElementById('controlPanel');
-let audioProcessor, freqAnalyzer, beatDetector, presetManager;
+let audioProcessor, freqAnalyzer, beatDetector;
 let currentVisualization, animationId;
 let mode = 'frequencyBars';
 let paused = false;
@@ -56,52 +117,22 @@ async function init() {
   await audioProcessor.init();
   freqAnalyzer = new FrequencyAnalyzer(audioProcessor.analyser);
   beatDetector = new BeatDetector(config.minThreshold);
-  presetManager = new PresetManager();
   switchVisualization(mode);
-  new ControlPanel(controlPanel, config, onControlChange);
-  setupPresetUI();
+  window.addEventListener('resize', handleResize);
+  resizeCanvasToDisplaySize(canvas);
+  render();
+}
+
 function handleResize() {
   resizeCanvasToDisplaySize(canvas);
   if (currentVisualization && typeof currentVisualization.resize === 'function') {
     currentVisualization.resize();
   }
 }
+
 window.addEventListener('resize', handleResize);
 canvas.addEventListener('fullscreenchange', handleResize);
 resizeCanvasToDisplaySize(canvas);
-  render();
-}
-
-function setupPresetUI() {
-  const presetList = document.getElementById('presetList');
-  const presetName = document.getElementById('presetName');
-  const saveBtn = document.getElementById('savePreset');
-  const loadBtn = document.getElementById('loadPreset');
-  function refreshList() {
-    presetList.innerHTML = '';
-    for (const name of presetManager.getPresetNames()) {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      presetList.appendChild(opt);
-    }
-  }
-  saveBtn.onclick = () => {
-    if (presetName.value) {
-      presetManager.savePreset(presetName.value, { ...config });
-      refreshList();
-    }
-  };
-  loadBtn.onclick = () => {
-    const name = presetList.value;
-    const preset = presetManager.loadPreset(name);
-    if (preset) {
-      Object.assign(config, preset);
-      switchVisualization(config.mode || mode);
-    }
-  };
-  refreshList();
-}
 
 function render() {
   if (paused) {
@@ -120,6 +151,13 @@ function render() {
   }
   currentVisualization.render(freqData);
   animationId = requestAnimationFrame(render);
+}
+
+// --- UI Event Handlers ---
+function setActiveModeIcon(mode) {
+  document.querySelectorAll('.mode-icon').forEach(icon => icon.classList.remove('active'));
+  const icon = document.getElementById('mode-' + mode);
+  if (icon) icon.classList.add('active');
 }
 
 init();
