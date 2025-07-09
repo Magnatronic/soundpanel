@@ -1,0 +1,28 @@
+/* Styles for the control panel UI */
+.control-panel label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.control-panel select,
+.control-panel input[type="range"],
+.control-panel button {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  background: #222;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.control-panel button {
+  background: #444;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.control-panel button:hover {
+  background: #666;
+}
